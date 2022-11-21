@@ -1,43 +1,48 @@
 import React, {useEffect, useState} from 'react';
-import {TwitchPlayerNonInteractive} from "react-twitch-embed";
 
 import SearchBtn from "../components/multistream/SearchBtn";
+import Stream from "../components/multistream/Stream";
+
+
+function getWindowSize() {
+    const {innerWidth, innerHeight} = window;
+    return {innerWidth, innerHeight};
+}
 
 const Multistream = () => {
-    const [search, setSearch] = useState(null);
-    const [streams, setStreams] = useState([])
+    const [streams, setStreams] = useState([]);
 
-
-    const onSubmit = (e) => {
-        setStreams(oldArray => [...oldArray, e])
-    }
+    const [windowSize, setWindowSize] = useState(getWindowSize());
 
 
     useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                event.preventDefault();
-                onSubmit(search);
-                console.log(streams)
-            }
-        };
-        document.addEventListener("keydown", listener);
+        function handleWindowResize() {
+            setWindowSize(getWindowSize());
+        }
+
+        window.addEventListener('resize', handleWindowResize);
         return () => {
-            document.removeEventListener("keydown", listener);
+            window.removeEventListener('resize', handleWindowResize);
         };
-    }, [search]);
+    }, []);
+
+
+
+    //todo: make hover on like move search bar to left
 
     return (
         <div>
-            <div className={'grid place-items-center'}>
-                <SearchBtn label={'Enter stream name'} handleData={(e) => {
-                    setSearch(e)
+            <div className={'grid place-items-center group->hover:place-items-left'}>
+                <SearchBtn streams={streams} label={'Enter stream name'} handleData={(e) => {
+                    setStreams(oldArray => [...oldArray, e]);
                 }}/>
             </div>
 
-            {
-                streams.map(e => <TwitchPlayerNonInteractive channel={e}/>)
-            }
+            <div className={"w-full h-full px-12 flex flex-row flex-wrap"}>
+                {
+                    streams.map(e => <Stream key={e.id} windowSize={windowSize} streamsLength={streams.length} stream={e}/>)
+                }
+            </div>
         </div>
     );
 };
